@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import AuthProvider from "@/providers/auth.provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
@@ -30,13 +31,15 @@ export default function RootLayout({
       <body
         className={`${ geistSans.variable } ${ geistMono.variable } antialiased min-h-screen flex flex-col justify-between bg-background text-foreground  `}
       >
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-        />
-        <Navbar/>
-        {children}
-        <Footer/>
+        <AuthProvider>
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+          />
+          <Navbar />
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
