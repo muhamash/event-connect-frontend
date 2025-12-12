@@ -4,10 +4,27 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import
+    {
+        Form,
+        FormControl,
+        FormField,
+        FormItem,
+        FormLabel,
+        FormMessage,
+    } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RegisterSchemaType } from "@/lib/services/auth/auth.type";
-import { RegisterSchema } from "@/lib/services/auth/auth.validation";
+import
+    {
+        Select,
+        SelectContent,
+        SelectItem,
+        SelectTrigger,
+        SelectValue,
+    } from "@/components/ui/select";
+
+import { UserRole } from "@/lib/constants/enum.constant";
+import { RegisterSchema, RegisterSchemaType } from "@/lib/services/auth/auth.validation";
 import Link from "next/link";
 
 
@@ -19,10 +36,10 @@ export default function RegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      role: UserRole.USER,
     },
   });
 
-  // On Submit
   const onSubmit = (data: RegisterSchemaType) => {
     console.log("Register Data:", data);
   };
@@ -104,6 +121,30 @@ export default function RegisterForm() {
                   className="bg-background border-border"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* ROLE SELECTION */}
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Register As</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/60 backdrop-blur-md text-white font-bold">
+                    <SelectItem value="USER">User</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="HOST">Host</SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

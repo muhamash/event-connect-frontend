@@ -35,9 +35,6 @@ enum PaymentStatus {
   FAILED
 }
 
-// ------------------------------------------------------
-// USER MODEL
-// ------------------------------------------------------
 
 model User {
   id              String    @id @default(cuid())
@@ -56,17 +53,13 @@ model User {
   payments        Payment[]
 }
 
-// ------------------------------------------------------
-// USER PROFILE
-// ------------------------------------------------------
-
 model Profile {
   id        String   @id @default(cuid())
   userId    String   @unique
   bio       String?  
   image     String?
   location  String?
-  interests String[] // e.g., ["Music", "Hiking", "Chess"]
+  interests String[] @default([])
 
   user      User     @relation(fields: [userId], references: [id])
 }
