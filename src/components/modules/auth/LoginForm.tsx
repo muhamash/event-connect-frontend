@@ -8,7 +8,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { LoginSchemaType } from "@/lib/services/auth/auth.type";
 import { LoginSchema } from "@/lib/services/auth/auth.validation";
+import { extractNextAuthError } from "@/lib/utils";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import toast from "react-hot-toast";
 
 
 
@@ -21,9 +26,43 @@ export default function LoginForm() {
         },
     } );
 
+    const [ isPending, startTransition ] = useTransition();
+    const router = useRouter();
+
     const onSubmit = ( data: LoginSchemaType ) =>
     {
-        console.log( "Form Data:", data );
+        startTransition( async () =>
+        {
+            try
+            {
+                const response = await signIn( "credentials", {
+                    redirect: false,
+                    email: data.email,
+                    password: data.password,
+                } );
+
+                // console.log( "Login response:", response );
+
+                if ( response?.ok )
+                {
+                    form.reset();
+                    toast.success( "Logged in successfully" );
+                    router.push("/")
+
+                }
+                else
+                {
+                    const fullError = extractNextAuthError( response );
+                    // console.log( "Login failed:", fullError );
+                    toast.error( fullError );
+                }
+
+            } catch ( error: any )
+            {
+                // console.log( "Login error:", error );
+                toast.error( error?.message || "Unexpected error" );
+            }
+        } );
     };
 
     return (
@@ -73,9 +112,10 @@ export default function LoginForm() {
                 {/* Submit Button */}
                 <Button
                     type="submit"
+                    disabled={isPending}
                     className="w-full bg-orange-700 text-white hover:shadow-glow hover:bg-black"
                 >
-                    Sign In
+                    {isPending ? "Logging in..." : "Login"}
                 </Button>
 
                 {/* Register Link */}

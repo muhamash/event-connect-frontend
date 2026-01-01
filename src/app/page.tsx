@@ -1,5 +1,4 @@
 import Index from "@/components/modules/Index";
-import prisma from "@/lib/db/prisma.db";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,8 +8,6 @@ export const metadata: Metadata = {
 
 export default async function Home ()
 {
-  const users = await prisma.user.findMany();
-  console.log(  users );
 
   return (
     <Index/>

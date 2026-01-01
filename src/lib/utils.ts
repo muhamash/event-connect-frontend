@@ -97,3 +97,32 @@ export function getPrismaErrorMessage(error: any) {
 
   return "Database error occurred.";
 }
+
+// utils/auth-error.ts
+export const extractNextAuthError = ( response: any ) =>
+{
+    if ( !response ) return "Unknown authentication error";
+
+    // Case 1: Standard NextAuth credential error
+    if ( response.error === "CredentialsSignin" )
+    {
+        return "Invalid email or password";
+    }
+
+    // Case 2: NextAuth returns custom backend message (if any)
+    if ( response.error && typeof response.error === "string" )
+    {
+        try
+        {
+            // Some setups return JSON strings inside error
+            const parsed = JSON.parse( response.error );
+            return parsed.message || parsed.error || "Authentication failed";
+        } catch
+        {
+            return response.error; // simple string error
+        }
+    }
+
+    // Case 3: Generic fallback
+    return "Authentication failed";
+};

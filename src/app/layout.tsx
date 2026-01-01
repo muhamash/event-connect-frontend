@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${ geistSans.variable } ${ geistMono.variable } antialiased min-h-screen flex flex-col justify-between bg-background text-foreground  `}
+        className={`${ geistSans.variable } ${ geistMono.variable } antialiased min-h-screen flex flex-col justify-between bg-background text-foreground  overflow-x-hidden`}
       >
         <AuthProvider>
           <Toaster

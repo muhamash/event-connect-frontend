@@ -1,13 +1,17 @@
-import { useState, useMemo } from "react";
+"use client"
+
+
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+
+import { mockEvents } from "@/components/data/mockData";
+import { EventFilters, FilterState } from "@/components/modules/events/EventFilters";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Users, Star } from "lucide-react";
-import { EventFilters, FilterState } from "@/components/EventFilters";
-import { mockEvents } from "@/data/mockData";
+import { Calendar, MapPin, Star, Users } from "lucide-react";
+import Link from "next/link";
+
 
 const Events = () => {
   const [filters, setFilters] = useState<FilterState>({
@@ -103,7 +107,7 @@ const Events = () => {
                   {...fadeInUp}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={`/events/${event.id}`}>
+                  <Link href={`/events/${event.id}`}>
                     <Card className="bg-card border-border hover:border-primary/50 transition-all group overflow-hidden h-full hover:shadow-card">
                       <div className="relative h-48 overflow-hidden">
                         <img
@@ -169,8 +173,6 @@ const Events = () => {
           )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };

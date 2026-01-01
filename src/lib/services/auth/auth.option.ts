@@ -21,22 +21,24 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     id: string;
     email: string;
-      name?: string;
-      role: string;
+    name?: string;
+    role: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-      id: string;
-      role: string;
+    id: string;
     email: string;
-    name?: string;
+    name: string; 
+    role: string;
     accessToken: string;
     refreshToken: string;
     accessTokenExpires: number;
+    rotated?: boolean;
   }
 }
+
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -58,7 +60,12 @@ export const authOptions: NextAuthOptions = {
 
                 // role: user?.role
                 // console.log(user)
-                return user;
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name, 
+                    role: user.role,
+                };
             },
         } ),
     ],
@@ -75,8 +82,10 @@ export const authOptions: NextAuthOptions = {
             {
                 const { accessToken, refreshToken, accessTokenExpires } = generateTokens( user as any );
                 return {
-                    ...token,
-                    ...user,
+                    id: user.id,
+                    email: user.email,
+                    name: user.name, 
+                    role: user.role,
                     accessToken,
                     refreshToken,
                     accessTokenExpires,
@@ -123,8 +132,13 @@ export const authOptions: NextAuthOptions = {
             if ( token )
             {
 
-                // role: token?.role 
-                session.user = { id: token.id, email: token.email, name: token.name, role: token.role };
+                session.user = {
+                    id: token.id as string,
+                    email: token.email as string,
+                    name: token.name as string, 
+                    role: token.role as string,
+                };
+                
                 session.accessToken = token.accessToken as string;
                 session.refreshToken = token.refreshToken as string;
                 ( session as any ).rotated = token.rotated;

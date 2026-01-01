@@ -1,3 +1,4 @@
+import { eventCategories } from "@/components/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +21,7 @@ import
     SheetTrigger,
   } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
-import { eventCategories } from '@/data/mockData';
+
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, DollarSign, Filter, MapPin, Search, X } from "lucide-react";
 import { useState } from "react";

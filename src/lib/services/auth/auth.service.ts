@@ -62,3 +62,4 @@ export const createUser = async ( payload: RegisterSchemaType ) =>
         };
     }
 };
+

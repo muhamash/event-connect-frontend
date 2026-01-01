@@ -1,10 +1,9 @@
-
 import { Calendar, Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
 
 export const Footer = () => {
   return (
-    <footer className="bg-orange-500 border-t border-border mt-20">
+    <footer className="bg-card border-t border-border mt-20">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -13,7 +12,7 @@ export const Footer = () => {
               <div className="p-2 bg-gradient-primary rounded-lg">
                 <Calendar className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold bg-black bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 EventConnect
               </span>
             </Link>

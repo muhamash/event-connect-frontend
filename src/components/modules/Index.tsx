@@ -1,6 +1,5 @@
 "use client"
 
-import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,9 +19,12 @@ import
     Users,
     Zap
   } from "lucide-react";
+
 import Link from "next/link";
+import { mockUsers } from "../data/mockData";
 
 const Index = () => {
+  const topHosts = mockUsers.filter(u => u.isHost).slice(0, 4);
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
@@ -90,7 +92,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
@@ -278,8 +279,57 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Top-Rated Hosts Section */}
       <section className="py-20 bg-card/30">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeInUp} className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Top-Rated <span className="bg-gradient-primary bg-clip-text text-transparent">Hosts</span>
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Meet our community's most trusted event organizers
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {topHosts.map((host, index) => (
+              <motion.div
+                key={host.id}
+                {...fadeInUp}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link href={`/profile/${host.id}`}>
+                  <Card className="bg-card border-border hover:border-primary/50 transition-all group text-center">
+                    <CardContent className="p-6">
+                      <div className="relative mx-auto w-20 h-20 mb-4">
+                        <img
+                          src={host.avatar}
+                          alt={host.name}
+                          className="w-full h-full rounded-full object-cover group-hover:ring-4 ring-primary/30 transition-all"
+                        />
+                        <div className="absolute -bottom-2 -right-2 bg-gradient-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">
+                          ⭐ {host.rating}
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
+                        {host.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">{host.location}</p>
+                      <div className="flex justify-center gap-4 text-sm text-muted-foreground">
+                        <span>{host.eventsHosted} events</span>
+                        <span>{host.totalReviews} reviews</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20">
         <div className="container mx-auto px-4">
           <motion.div {...fadeInUp} className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -335,6 +385,7 @@ const Index = () => {
           </Link>
         </motion.div>
       </section>
+
     </div>
   );
 };
