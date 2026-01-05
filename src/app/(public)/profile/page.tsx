@@ -2,20 +2,19 @@ import Profile from "@/components/modules/profile/ProfileContainer";
 import ProfileSkeleton from "@/components/skeletons/ProfilePageSkeleton";
 import { authOptions } from "@/lib/services/auth/auth.option";
 import { getUserInfoById } from "@/lib/services/user/user.service";
+import { RouteSearchParams } from "@/types/pages.type";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { Suspense } from "react";
 
 interface ProfilePageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: RouteSearchParams;
 }
 
 
 export async function generateMetadata({
   searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}): Promise<Metadata> {
+}: ProfilePageProps): Promise<Metadata> {
   let userId = searchParams.userId;
   if (Array.isArray(userId)) userId = userId[0];
 
@@ -57,9 +56,7 @@ export async function generateMetadata({
 
 export default async function ProfilePage({
   searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}: ProfilePageProps) {
   const params = await searchParams; 
   let userId = params.userId;
   if (Array.isArray(userId)) userId = userId[0];
