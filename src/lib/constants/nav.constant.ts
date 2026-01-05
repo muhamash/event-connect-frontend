@@ -60,7 +60,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Profile",
-    href: "/profile/user-1",
+    href: "/profile",
     icon: User,
     roles: ["user", "host", "admin"],
     variant: "ghost",

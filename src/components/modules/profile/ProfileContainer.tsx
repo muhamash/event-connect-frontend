@@ -8,21 +8,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import
-    {
-        Award,
-        Calendar,
-        CalendarDays,
-        Edit,
-        MapPin,
-        Star,
-        Ticket,
-        Users
-    } from "lucide-react";
+  {
+    Award,
+    Calendar,
+    CalendarDays,
+    Edit,
+    MapPin,
+    Star,
+    Ticket,
+    Users
+  } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { use } from "react";
 
 
-const Profile = () => {
+const Profile = ( { userPromise }: { userPromise: Promise<any> } ) =>
+{
+ 
+  // console.log(userPromise)
+  const userData = use( userPromise )
+  console.log(userData)
+  
   const { id } = useParams();
   const user = mockUsers.find((u) => u.id === id) || mockUsers[0];
   const isOwnProfile = true; 
@@ -31,6 +38,10 @@ const Profile = () => {
   const attendedEvents = mockEvents.slice(0, 3); 
   const userReviews = mockReviews;
 
+    if (!userData || (userData as any).success === false) {
+    return <div className="text-center py-20 text-rose-700 font-bold uppercase">User not found</div>;
+    }
+  
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
