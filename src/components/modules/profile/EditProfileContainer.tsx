@@ -22,13 +22,15 @@ import
   } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cloudinaryUpSingleImage } from "@/lib/services/services.controller";
+import { updateUserById } from "@/lib/services/user/user.service";
 import { EditProfileFormValues } from "@/lib/services/user/user.type";
 import { editProfileSchema } from "@/lib/services/user/user.validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { ArrowLeft, Camera, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { use } from "react";
+import { use, useState, useTransition } from 'react';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
@@ -44,17 +46,64 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
   // console.log( userData )
   
   const router = useRouter();
-  // const user = mockUsers[0];
+  const [ isPending, startTransition ] = useTransition();
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
   const form = useForm<EditProfileFormValues>( {
     resolver: zodResolver( editProfileSchema ),
     defaultValues: {
       fullname: user?.fullname ?? "",
       bio: user?.bio ?? "",
+      image: user?.image ?? "",
       location: user?.location ?? "",
       interests: user?.interests ?? [],
     },
-  } );;
+  } );
+
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) =>
+  {
+    const file = e.target.files?.[ 0 ];
+    if ( !file ) return;
+
+    const MAX_SIZE = 150 * 1024;
+    if ( file.size > MAX_SIZE )
+    {
+      toast.error( "Image size must be less than 250KB" );
+      return;
+    }
+
+    startTransition( async () =>
+    {
+      try
+      {
+        const base64File = await new Promise<string>( ( resolve, reject ) =>
+        {
+          const reader = new FileReader();
+          reader.onload = () => resolve( reader.result as string );
+          reader.onerror = () => reject( new Error( "File reading failed" ) );
+          reader.readAsDataURL( file );
+        } );
+
+        setImagePreview( base64File );
+
+        const res = await cloudinaryUpSingleImage( base64File );
+        console.log( res )
+
+        if ( !res.success )
+        {
+          toast.error( res.message || "Image upload failed" );
+          return;
+        }
+        form.setValue( "image", res.url, { shouldValidate: true } );
+      } catch ( err: any )
+      {
+        toast.error( err.message || "Something went wrong" );
+      }
+    } )
+  };
 
   const toggleInterest = (interest: string) => {
     const current = form.getValues("interests");
@@ -68,10 +117,23 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
     );
   };
 
-  const onSubmit = (data: EditProfileFormValues) => {
-    console.log("FORM DATA 👉", data);
-    toast.success("Profile updated successfully!");
-    // router.push(`/profile/${user.id}`);
+  const onSubmit = async(data: EditProfileFormValues) => {
+    console.log( "FORM DATA 👉", data, user?.id );
+
+    startTransition( async() => {
+      const result = await updateUserById( user?.id, data )
+      console.log( result );
+
+      toast.success( result?.message );
+      
+      if ( result?.success )
+      {
+        router.push(`/profile?id=${result?.data?.id}`);
+      }
+      
+    })
+    
+    
   };
 
   return (
@@ -91,25 +153,35 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
             <CardContent>
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit( onSubmit )}
                   className="space-y-6"
                 >
-                  {/* Avatar */}
+                  {/* image */}
                   <div className="flex justify-center">
                     <div className="relative">
                       <Avatar className="h-32 w-32 border-4 border-primary/20">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src={imagePreview ?? user?.image ?? ""} />
                         <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
-                          {user.fullname.charAt(0)}
+                          {user?.fullname?.charAt( 0 )}
                         </AvatarFallback>
                       </Avatar>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        id="avatar-upload"
+                        onChange={handleImageUpload}
+                      />
+
                       <Button
                         type="button"
                         size="icon"
                         className="absolute bottom-0 right-0 rounded-full"
+                        onClick={() => document.getElementById( "avatar-upload" )?.click()}
                       >
                         <Camera className="h-4 w-4" />
                       </Button>
+
                     </div>
                   </div>
 
@@ -117,7 +189,7 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
                   <FormField
                     control={form.control}
                     name="fullname"
-                    render={({ field }) => (
+                    render={( { field } ) => (
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
@@ -132,7 +204,7 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
                   <FormField
                     control={form.control}
                     name="location"
-                    render={({ field }) => (
+                    render={( { field } ) => (
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <FormControl>
@@ -147,7 +219,7 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
                   <FormField
                     control={form.control}
                     name="bio"
-                    render={({ field }) => (
+                    render={( { field } ) => (
                       <FormItem>
                         <FormLabel>Bio</FormLabel>
                         <FormControl>
@@ -170,22 +242,23 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
                       <FormItem>
                         <FormLabel>Interests</FormLabel>
                         <div className="flex flex-wrap gap-2 pt-2">
-                          {interestOptions.map((interest) => {
+                          {interestOptions.map( ( interest ) =>
+                          {
                             const active =
-                              form.watch("interests").includes(interest);
+                              form.watch( "interests" ).includes( interest );
 
                             return (
                               <Badge
                                 key={interest}
                                 variant={active ? "default" : "outline"}
-                                onClick={() => toggleInterest(interest)}
+                                onClick={() => toggleInterest( interest )}
                                 className="cursor-pointer"
                               >
                                 {interest}
                                 {active && <X className="h-3 w-3 ml-1" />}
                               </Badge>
                             );
-                          })}
+                          } )}
                         </div>
                         <FormMessage />
                       </FormItem>

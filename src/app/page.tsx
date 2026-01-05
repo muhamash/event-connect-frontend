@@ -1,5 +1,5 @@
 import Index from "@/components/modules/Index";
-import prisma from "@/lib/db/prisma.db";
+import prisma from "@/lib/config/db/prisma.db";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
