@@ -25,19 +25,19 @@ import { use } from "react";
 interface ProfileProps
 {
   userPromise: Promise<any>;
-  userId?: string;
+  sessionUser?: string;
 }
 
-const Profile = ( { userPromise, userId }: ProfileProps ) =>
+const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
 {
  
-  // console.log(userPromise)
+  console.log(sessionUser)
   const userData = use( userPromise )
   console.log(userData?.data)
   
   const { id } = useParams();
   const user = mockUsers.find((u) => u.id === id) || mockUsers[0];
-  const isOwnProfile = userData?.data?.id === userId; 
+  const isOwnProfile = userData?.data?.id === sessionUser; 
 
   const hostedEvents = mockEvents.filter((e) => e.hostId === user.id);
   const attendedEvents = mockEvents.slice(0, 3); 

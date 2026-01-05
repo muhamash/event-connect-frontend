@@ -12,21 +12,26 @@ interface ProfilePageProps {
 
 export default async function ProfilePage({
   searchParams,
-}: ProfilePageProps) {
-  const params = await searchParams; 
-  let userId = params?.userId;
-  if (Array.isArray(userId)) userId = userId[0];
+}: ProfilePageProps )
+{
+  let userId = ( await searchParams )?.userId;
+  if ( Array.isArray( userId ) ) userId = userId[ 0 ];
+
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user?.id;
+
+  if (!userId) userId = sessionUser;
 
   if (!userId) {
-    const session = await getServerSession(authOptions);
-    userId = session?.user?.id;
+    return <div>User not found or not logged in</div>;
   }
 
-  const userPromise = getUserInfoById(userId!);
+
+  const userPromise = getUserInfoById(userId);
 
   return (
     <Suspense fallback={<ProfileSkeleton />}>
-      <Profile userId={userId} userPromise={userPromise} />
+      <Profile sessionUser={sessionUser} userPromise={userPromise} />
     </Suspense>
   );
 }

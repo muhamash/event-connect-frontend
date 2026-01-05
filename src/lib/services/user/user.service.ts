@@ -60,6 +60,11 @@ export const updateUserById = async (
 {
     try
     {
+        if ( !data )
+        {
+            return { success: false, message: "provide editable data" };
+        }
+
         const checkUser = await prisma.user.findUnique( {
             where: {
                 id

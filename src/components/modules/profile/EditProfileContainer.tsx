@@ -47,7 +47,7 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
   
   const router = useRouter();
   const [ isPending, startTransition ] = useTransition();
-
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const form = useForm<EditProfileFormValues>( {
@@ -61,79 +61,99 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
     },
   } );
 
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) =>
+  const toggleInterest = ( interest: string ) =>
   {
-    const file = e.target.files?.[ 0 ];
-    if ( !file ) return;
+    const current = form.getValues( "interests" );
 
-    const MAX_SIZE = 150 * 1024;
-    if ( file.size > MAX_SIZE )
+    form.setValue(
+      "interests",
+      current.includes( interest )
+        ? current.filter( ( i ) => i !== interest )
+        : [ ...current, interest ],
+      { shouldValidate: true }
+    );
+  };
+
+  const handleImageUpload = async( e: React.ChangeEvent<HTMLInputElement> ) =>
+  {
+    const file = e.target.files?.[ 0 ] ?? null;
+    setImageFile( file );
+
+    const base64File = await new Promise<string>( ( resolve, reject ) =>
     {
-      toast.error( "Image size must be less than 250KB" );
-      return;
-    }
+      const reader = new FileReader();
+      reader.onload = () => resolve( reader.result as string );
+      reader.onerror = () => reject( new Error( "File reading failed" ) );
+      reader.readAsDataURL( file );
+    } );
+
+    setImagePreview( base64File );
+    
+  };
+
+
+
+  const onSubmit = async ( data: EditProfileFormValues ) =>
+  {
+    if ( !user?.id ) return;
 
     startTransition( async () =>
     {
       try
       {
-        const base64File = await new Promise<string>( ( resolve, reject ) =>
+        let imageUrl = data.image; 
+
+        
+        if ( imageFile )
         {
-          const reader = new FileReader();
-          reader.onload = () => resolve( reader.result as string );
-          reader.onerror = () => reject( new Error( "File reading failed" ) );
-          reader.readAsDataURL( file );
-        } );
+          const MAX_SIZE = 150 * 1024;
+          if ( imageFile.size > MAX_SIZE )
+          {
+            toast.error( "Image size must be less than 150KB" );
+            return;
+          }
 
-        setImagePreview( base64File );
+          const base64File = await new Promise<string>( ( resolve, reject ) =>
+          {
+            const reader = new FileReader();
+            reader.onload = () => resolve( reader.result as string );
+            reader.onerror = () => reject( new Error( "File reading failed" ) );
+            reader.readAsDataURL( imageFile );
+          } );
 
-        const res = await cloudinaryUpSingleImage( base64File );
-        console.log( res )
+          setImagePreview( base64File );
 
-        if ( !res.success )
+          const res = await cloudinaryUpSingleImage( base64File );
+          if ( !res.success )
+          {
+            toast.error( res.message || "Image upload failed" );
+            return;
+          }
+
+          imageUrl = res.url; 
+        }
+
+        const updatedData = {
+          ...data,
+          image: imageUrl,
+        };
+
+        const result = await updateUserById( user.id, updatedData );
+
+        if ( !result.success )
         {
-          toast.error( res.message || "Image upload failed" );
+          toast.error( result.message || "Profile update failed" );
           return;
         }
-        form.setValue( "image", res.url, { shouldValidate: true } );
+
+        toast.success( "Profile updated successfully!" );
+
+        router.push( `/profile?userId=${ user.id }` );
       } catch ( err: any )
       {
         toast.error( err.message || "Something went wrong" );
       }
-    } )
-  };
-
-  const toggleInterest = (interest: string) => {
-    const current = form.getValues("interests");
-
-    form.setValue(
-      "interests",
-      current.includes(interest)
-        ? current.filter((i) => i !== interest)
-        : [...current, interest],
-      { shouldValidate: true }
-    );
-  };
-
-  const onSubmit = async(data: EditProfileFormValues) => {
-    console.log( "FORM DATA 👉", data, user?.id );
-
-    startTransition( async() => {
-      const result = await updateUserById( user?.id, data )
-      console.log( result );
-
-      toast.success( result?.message );
-      
-      if ( result?.success )
-      {
-        router.push(`/profile?id=${result?.data?.id}`);
-      }
-      
-    })
-    
-    
+    } );
   };
 
   return (
@@ -275,9 +295,11 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1">
+                    <Button disabled={isPending} type="submit" className="flex-1">
                       <Save className="h-4 w-4 mr-2" />
-                      Save Changes
+                      {
+                        isPending ? "Saving" : "Save Changes"
+                      }
                     </Button>
                   </div>
                 </form>
