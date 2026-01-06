@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { UserRole } from "./lib/constants/enum.constant";
 import { authOptions } from "./lib/services/auth/auth.option";
 
 
@@ -20,7 +21,22 @@ export async function proxy ( request: NextRequest )
     {
         return NextResponse.redirect(new URL("/profile", request.url));
     }
+
+    // role based access
+    if ( session && session?.user?.role !== UserRole.HOST && pathname === "/events/create" )
+    {
+        return NextResponse.redirect(new URL("/events", request.url));
+    }
     
+    if ( !session && pathname === "/events/create" )
+    {
+        return NextResponse.redirect(new URL("/events", request.url));
+    }
+
+    if ( !session && pathname === "/dashboard" || session && session?.user?.role === UserRole.USER )
+    {
+        return NextResponse.redirect(new URL("/profile", request.url));
+    }
 }
 
 export const config = {

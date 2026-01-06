@@ -30,9 +30,9 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "My Events",
-    href: "/dashboard",
+    href: "/my-events",
     icon: CalendarDays,
-    roles: ["user"],
+    roles: ["user", "host"],
   },
   {
     label: "Create Event",

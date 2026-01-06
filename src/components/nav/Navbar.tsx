@@ -25,8 +25,7 @@ export const Navbar = () =>
   const role = ( session.data?.user?.role?.toLowerCase() as any ) ?? "guest";
 
   
-  
-    const toggleDrawer = () => setDrawerOpen((prev) => !prev);
+  const toggleDrawer = () => setDrawerOpen( ( prev ) => !prev );
   
   const navItems = NAV_ITEMS.filter( ( item ) => item.roles.includes( role ) );
   

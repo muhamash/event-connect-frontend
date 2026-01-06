@@ -1,89 +1,180 @@
-"use client"
+"use client";
 
 import { eventCategories } from "@/components/data/mockData";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import
-    {
-        Select,
-        SelectContent,
-        SelectItem,
-        SelectTrigger,
-        SelectValue,
-    } from "@/components/ui/select";
+  {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+  } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import
+  {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+  } from "@/components/ui/popover";
+import
+  {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { createEvent } from "@/lib/services/event/event.service";
+import { EventFormValues } from "@/lib/services/event/event.type";
+import { eventSchema } from "@/lib/services/event/event.validation";
+import { cloudinaryUpSingleImage } from "@/lib/services/services.controller";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import
-    {
-        ArrowLeft,
-        Calendar,
-        Clock,
-        DollarSign,
-        ImagePlus,
-        MapPin,
-        Sparkles,
-        Users,
-    } from "lucide-react";
+  {
+    ArrowLeft, BotIcon, Calendar1Icon, CalendarIcon, Clock, ImagePlus,
+    MapPin,
+    Sparkles,
+    Users
+  } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
-const CreateEvent = () => {
-  const navigate = useRouter();
-  const [isPaid, setIsPaid] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+interface CreateEventProps
+{
+  hostId: string;
+}
 
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    description: "",
-    date: "",
-    time: "",
-    location: "",
-    address: "",
-    maxAttendees: "",
-    price: "",
-  });
+const CreateEvent = ({hostId}: CreateEventProps) =>
+{
+  const router = useRouter();
+  const [ isPaid, setIsPaid ] = useState( false );
+  const [ imagePreview, setImagePreview ] = useState<string | null>( null );
+  const [ imageFile, setImageFile ] = useState<File | null>( null );
+  const [ isPending, startTransition ] = useTransition();
+  
+  const form = useForm<EventFormValues>( {
+    resolver: zodResolver( eventSchema ),
+    defaultValues: {
+      title: "",
+      category: "",
+      description: "",
+      date: undefined,
+      time: "",
+      location: "",
+      image: null,
+      maxParticipants: 2,
+      joiningFee: 0,
+    },
+  } );
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleImageUpload = async ( e: React.ChangeEvent<HTMLInputElement> ) =>
+  {
+    const file = e.target.files?.[ 0 ] ?? null;
+    setImageFile( file );
+
+    const base64File = await new Promise<string>( ( resolve, reject ) =>
+    {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+      reader.onload = () => resolve( reader.result as string );
+      reader.onerror = () => reject( new Error( "File reading failed" ) );
+      reader.readAsDataURL( file );
+    } );
+
+    setImagePreview( base64File );
+    
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Creating event with data:", {
-      ...formData,
-      isPaid,
-      imagePreview: imagePreview ? "Image uploaded" : "No image",
-    });
-    toast.success("Event created successfully!");
-    navigate.push("/events");
+  const onSubmit = ( data: EventFormValues ) =>
+  {
+    startTransition( async () =>
+    {
+      try
+      {
+        if ( isPaid && data?.joiningFee < 1 )
+        {
+          toast.error("Your event is paid but joining fee remained 0!")
+          return
+        }
+
+        let imageUrl = data.image;
+
+        
+        if ( imageFile )
+        {
+          const MAX_SIZE = 150 * 1024;
+          if ( imageFile.size > MAX_SIZE )
+          {
+            toast.error( "Image size must be less than 150KB" );
+            return;
+          }
+
+          const base64File = await new Promise<string>( ( resolve, reject ) =>
+          {
+            const reader = new FileReader();
+            reader.onload = () => resolve( reader.result as string );
+            reader.onerror = () => reject( new Error( "File reading failed" ) );
+            reader.readAsDataURL( imageFile );
+          } );
+
+          setImagePreview( base64File );
+
+          const res = await cloudinaryUpSingleImage( base64File );
+          if ( !res.success )
+          {
+            toast.error( res.message || "Image upload failed" );
+            return;
+          }
+
+          imageUrl = res.url;
+        }
+
+        const payload = {
+          title: data.title,
+          category: data.category,
+          description: data.description,
+          image: imageUrl,
+          date: new Date( data.date ),
+          time: data.time,
+          location: data.location,
+          maxParticipants: data.maxParticipants,
+          joiningFee: isPaid ? data.joiningFee : 0,
+        };
+
+        // console.log( payload, hostId );
+        const result = await createEvent( payload, hostId );
+
+        console.log(result)
+        if ( result?.success )
+        {
+          toast.success( result?.message )
+          router.push("/dashboard")
+        }
+
+      } catch ( error: any )
+      {
+        toast.error( error.message || "Something went wrong" );
+      }
+    } )
+    
   };
 
+  // console.log(hostId)
   return (
     <div className="min-h-screen bg-background">
-
       <div className="pt-24 pb-12">
         <div className="container mx-auto px-4 max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Button
-              variant="ghost"
-              onClick={() => navigate.back()}
-              className="mb-6"
-            >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Button variant="ghost" onClick={() => router.back()} className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
@@ -96,326 +187,247 @@ const CreateEvent = () => {
                 </span>
               </h1>
               <p className="text-muted-foreground">
-                Fill in the details below to create your event and start
-                connecting with attendees
+                Fill in the details below to create your event
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Event Image */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ImagePlus className="h-5 w-5 text-primary" />
-                    Event Image
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg transition-all ${
-                      imagePreview
-                        ? "border-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit( onSubmit )} className="space-y-6">
+
+                {/* IMAGE */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImagePlus className="h-5 w-5 text-primary" />
+                      Event Image
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     {imagePreview ? (
-                      <div className="relative h-64">
-                        <img
-                          src={imagePreview}
-                          alt="Event preview"
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="absolute top-4 right-4"
-                          onClick={() => setImagePreview(null)}
-                        >
-                          Change Image
-                        </Button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center h-48 cursor-pointer">
-                        <ImagePlus className="h-12 w-12 text-muted-foreground mb-4" />
-                        <span className="text-muted-foreground mb-2">
-                          Click to upload event image
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          PNG, JPG up to 5MB
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
+                      <img src={imagePreview} className="h-64 w-full object-cover rounded-lg mb-4" />
+                    ) : null}
+                    <Input type="file" accept="image/*" onChange={handleImageUpload} />
+                  </CardContent>
+                </Card>
+
+                {/* BASIC INFO */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Basic Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField name="title" control={form.control} render={( { field } ) => (
+                      <FormItem>
+                        <FormLabel>Event Title</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField name="category" control={form.control} render={( { field } ) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-black">
+                            {eventCategories.map( c => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ) )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField name="description" control={form.control} render={( { field } ) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl><Textarea {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </CardContent>
+                </Card>
+
+                {/* DATE & TIME */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar1Icon className="h-5 w-5 text-primary" />
+                      Date & Time
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="grid md:grid-cols-2 gap-4">
+                    {/* DATE */}
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={( { field } ) => (
+                        <FormItem className="flex flex-col gap-2">
+                          <FormLabel>Date</FormLabel>
+
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className={`
+                                    h-10 w-full justify-between
+                                    bg-background border-border
+                                    px-3 font-normal
+                                    ${ !field.value && "text-muted-foreground" }
+                                    `}
+                                >
+                                  {field.value ? format( field.value, "PPP" ) : "Select date"}
+                                  <CalendarIcon className="h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+
+                            <PopoverContent
+                              align="start"
+                              className="w-auto p-3"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={( date ) =>
+                                  date <= new Date( new Date().setHours( 0, 0, 0, 0 ) )
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* TIME */}
+                    <FormField
+                      control={form.control}
+                      name="time"
+                      render={( { field } ) => (
+                        <FormItem className="flex flex-col gap-2">
+                          <FormLabel>Time</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                type="time"
+                                className="h-10 pl-10 bg-background border-border"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+
+                {/* LOCATION & CAPACITY */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      Location
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField name="location" control={form.control} render={( { field } ) => (
+                      <FormItem>
+                        <FormLabel>Venue</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                      </FormItem>
+                    )} />
+
+                    <FormField
+                      name="maxParticipants"
+                      control={form.control}
+                      render={( { field } ) => (
+                        <FormItem>
+                          <FormLabel>Maximum Attendees</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              value={field.value ?? ""}
+                              onChange={( e ) => field.onChange( Number( e.target.value ) )}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                  </CardContent>
+                </Card>
+
+                {/* PRICING */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      Capacity & Pricing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Paid Event</span>
+                      <Switch
+                        checked={isPaid}
+                        onCheckedChange={( v ) =>
+                        {
+                          setIsPaid( v );
+                          if ( !v ) form.setValue( "joiningFee", 0 );
+                        }}
+                      />
+                    </div>
+
+                    {isPaid && (
+                      <FormField
+                        name="joiningFee"
+                        control={form.control}
+                        render={( { field } ) => (
+                          <FormItem>
+                            <FormLabel>Ticket Price</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={field.value ?? ""}
+                                onChange={( e ) => field.onChange( Number( e.target.value ) )}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                     )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Basic Info */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Basic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Event Title</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      placeholder="Give your event a catchy title"
-                      className="bg-background border-border"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, category: value }))
-                      }
-                    >
-                      <SelectTrigger className="bg-background border-border">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      placeholder="Describe what attendees can expect..."
-                      className="bg-background border-border min-h-[120px]"
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Date & Time */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Date & Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="date">Date</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="date"
-                          type="date"
-                          value={formData.date}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              date: e.target.value,
-                            }))
-                          }
-                          className="bg-background border-border pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="time">Time</Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="time"
-                          type="time"
-                          value={formData.time}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              time: e.target.value,
-                            }))
-                          }
-                          className="bg-background border-border pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Location */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    Location
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Venue Name</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          location: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g., Central Park, The Art Gallery"
-                      className="bg-background border-border"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Full Address</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                      placeholder="Street address, City, State, ZIP"
-                      className="bg-background border-border"
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Capacity & Pricing */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    Capacity & Pricing
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="maxAttendees">Maximum Attendees</Label>
-                    <Input
-                      id="maxAttendees"
-                      type="number"
-                      min="2"
-                      value={formData.maxAttendees}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          maxAttendees: e.target.value,
-                        }))
-                      }
-                      placeholder="How many people can attend?"
-                      className="bg-background border-border"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">Paid Event</p>
-                        <p className="text-sm text-muted-foreground">
-                          Charge a joining fee for this event
-                        </p>
-                      </div>
-                    </div>
-                    <Switch checked={isPaid} onCheckedChange={setIsPaid} />
-                  </div>
-
-                  {isPaid && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2"
-                    >
-                      <Label htmlFor="price">Ticket Price (USD)</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="price"
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={formData.price}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              price: e.target.value,
-                            }))
-                          }
-                          placeholder="0.00"
-                          className="bg-background border-border pl-10"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        A 5% platform fee will be applied to paid events
-                      </p>
-                    </motion.div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Submit */}
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 border-border"
-                  onClick={() => navigate.back()}
-                >
-                  Cancel
+                <Button disabled={isPending} type="submit" className="w-full">
+                  <BotIcon className="h-4 w-4 mr-2" />
+                  {isPending ? "Creating..." : "Create Event"}
                 </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-primary hover:opacity-90"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Create Event
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
           </motion.div>
         </div>
       </div>
-
     </div>
   );
 };

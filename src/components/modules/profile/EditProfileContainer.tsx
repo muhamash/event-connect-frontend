@@ -91,8 +91,6 @@ const EditProfile = ( {userPromise}: EditProfileProps ) =>
     
   };
 
-
-
   const onSubmit = async ( data: EditProfileFormValues ) =>
   {
     if ( !user?.id ) return;

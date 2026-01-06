@@ -50,7 +50,7 @@ model User {
 
   rating          Float        @default(0)
   totalReviews    Int          @default(0)
-  eventsHosted    Int          @default(0)
+  eventsHosted    Int          @default(0) //delete later
   eventsAttended  Int          @default(0)
 
   createdAt       DateTime     @default(now())
@@ -93,6 +93,7 @@ model Event {
   description     String
   image           String?
   date            DateTime
+  time            String
   location        String
   maxParticipants     Int
   joiningFee      Float         @default(0)

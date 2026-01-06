@@ -159,3 +159,6 @@ export const formatDate = (
         ...( withTime ? timeOptions : {} ),
     } ).format( date );
 };
+
+export const normalizeParam = (param?: string | string[]) =>
+    Array.isArray(param) ? param[0] : param;
