@@ -22,7 +22,7 @@ export const eventSchema = z.object( {
     maxParticipants: z
         .number()
         .int()
-        .min( 2, "Minimum 2 participants required" ),
+        .min( 5, "Minimum 5 participants required" ),
 
     joiningFee: z
         .number()
