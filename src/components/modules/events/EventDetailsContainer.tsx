@@ -38,8 +38,15 @@ const EventDetails = ( { eventPromise, sessionRole }: EventDetailsProps ) =>
     router?.push("/not-found")
   }
 
-  console.log(eventData?.data)
+  console.log( eventData?.data )
 
+  const isFull =
+    eventData?.data &&
+    eventData?.data?.participants?.length >= eventData?.data?.maxParticipants;
+
+  const isUser = sessionRole === UserRole.USER;
+
+  // mock
   const { id } = useParams();
   const event = mockEvents.find((e) => e.id === Number(id)) || mockEvents[0];
   const host = mockUsers.find((u) => u.id === event.hostId) || mockUsers[0];
@@ -62,9 +69,9 @@ const EventDetails = ( { eventPromise, sessionRole }: EventDetailsProps ) =>
           {
             sessionRole !== UserRole.USER && (
               <div className="absolute top-6 left-6 flex  items-center gap-5">
-            <Badge className="bg-rose-700 w-20 h-10 flex items-center justify-center">{ eventData?.data?.status }</Badge>
-            {/* <ShareButton /> */}
-          </div>
+                <Badge className="bg-rose-700 w-20 h-10 flex items-center justify-center">{eventData?.data?.status}</Badge>
+                {/* <ShareButton /> */}
+              </div>
             )
           }
           <div className="absolute top-6 right-6 flex  items-center gap-5">
@@ -188,7 +195,7 @@ const EventDetails = ( { eventPromise, sessionRole }: EventDetailsProps ) =>
                           <AvatarFallback>{attendee.fullname[ 0 ]}</AvatarFallback>
                         </Avatar>
                       ) )}
-                      {eventData?.data?.participants?.maxParticipants > eventData?.data?.participants.length && (
+                      {eventData?.data?.participants?.maxParticipants > eventData?.data?.participants?.length && (
                         <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted border-2 border-background text-sm font-semibold text-foreground">
                           +{event.attendees - attendeesList.length}
                         </div>
@@ -221,18 +228,47 @@ const EventDetails = ( { eventPromise, sessionRole }: EventDetailsProps ) =>
                       <p className="text-muted-foreground">per person</p>
                     </div>
 
-                    {
-                      sessionRole === UserRole.USER && (
-                        <Link href={`/events/${ eventData?.data?.id }/checkout?tickets=1`}>
+                    {/* {sessionRole === UserRole.USER &&
+                      eventData?.data &&
+                      eventData.data.participants.length < eventData.data.maxParticipants && (
+                        <Link
+                          href={`/events/${ eventData.data.id }/checkout?tickets=1`}
+                        >
                           <Button
                             size="lg"
                             className="w-full bg-gradient-primary text-primary-foreground hover:shadow-glow mb-4"
                           >
-                            {eventData?.data?.joiningFee === 0 ? "Join Event (Free)" : `Join Event - $${ eventData?.data?.joiningFee }`}
+                            {eventData.data.joiningFee === 0
+                              ? "Join Event (Free)"
+                              : `Join Event - $${ eventData.data.joiningFee }`}
                           </Button>
                         </Link>
-                      )
-                    }
+                      )} */}
+
+                    {isUser && eventData?.data && (
+                      <>
+                        {!isFull ? (
+                          <Link href={`/events/${ eventData?.data?.id }/checkout?tickets=1`}>
+                            <Button
+                              size="lg"
+                              className="w-full bg-gradient-primary text-primary-foreground hover:shadow-glow mb-4"
+                            >
+                              {eventData?.data?.joiningFee === 0
+                                ? "Join Event (Free)"
+                                : `Join Event - $${ eventData?.data?.joiningFee }`}
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button
+                            size="lg"
+                            disabled
+                            className="w-full mb-4 cursor-not-allowed bg-muted text-muted-foreground"
+                          >
+                            Event Full
+                          </Button>
+                        )}
+                      </>
+                    )}
 
                     <div className="space-y-3 pt-4 border-t border-border">
                       <div className="flex items-center justify-between text-sm">

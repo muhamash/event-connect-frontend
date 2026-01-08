@@ -265,14 +265,16 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
                         <CardContent className="p-12 text-center">
                           <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                           <h3 className="text-xl font-bold mb-2">No  {EventStatus.COMPLETED} Events Hosted Yet</h3>
-                          <p className="text-muted-foreground mb-4">
-                            Start hosting events to connect with amazing people!
-                          </p>
-                          <Link href="/events/create">
+                          
+                            {
+                              isOwnProfile && (
+                                <Link href="/events/create">
                             <Button className="bg-gradient-primary">
                               Create Your Event
                             </Button>
                           </Link>
+                              )
+                          }
                         </CardContent>
                       </Card>
                     )}
