@@ -9,6 +9,7 @@ import
         DropdownMenuItem,
         DropdownMenuTrigger,
     } from "@/components/ui/dropdown-menu";
+import { cancelEvent } from "@/lib/services/event/event.service";
 import { formatDate } from "@/lib/utils";
 import
     {
@@ -84,10 +85,16 @@ export default function OngoingEventCard ( { event }: any )
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() =>
+                        onClick={async() =>
                         {
-                            console.log( "Cancel event:", event.id );
-                            toast.success( "Event cancelled" );
+                            const result = await cancelEvent(event?.id)
+                            
+                            if ( !result?.success )
+                            {
+                                toast.success( result?.message );
+                            }
+
+                            toast.success( result?.message );
                         }}
                     >
                         <XCircle className="h-4 w-4 mr-2" />

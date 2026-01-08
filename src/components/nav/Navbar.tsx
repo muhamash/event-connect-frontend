@@ -8,8 +8,6 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
 import { NavbarSkeleton } from "../skeletons/NavSkelton";
-import { Badge } from "../ui/badge";
-import { NavRenderer } from "./Nav.util";
 
 export const Navbar = () =>
 {
@@ -38,29 +36,48 @@ export const Navbar = () =>
             <div className="p-2 bg-gradient-primary rounded-lg group-hover:shadow-glow">
               <Calendar className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold bg-gradient-gold bg-clip-text text-transparent">
+            <span className="text-md md:text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
               EventConnect
             </span>
           </Link>
 
           {/* Right Side */}
-          <div className="flex gap-4 items-center">
+          {/* <div className="flex gap-4 items-center">
             {isLoggedIn && <Badge>{role}</Badge>}
             <NavRenderer role={role} />
-          </div>
+          </div> */}
 
-          {/* Mobile Hamburger */}
-          <div className="md:hidden flex items-center">
-            <Button onClick={toggleDrawer} variant="ghost" className="p-2">
-              {drawerOpen ? <X className="h-6 w-6 z-999" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
-          
-          {/* Mobile Drawer */}
+          {/*  Hamburger */}
+          {
+            session?.status === "authenticated" && (
+              <div className=" flex items-center">
+                <Button onClick={toggleDrawer} variant="ghost" className="p-2">
+                  {!drawerOpen && <Menu className="h-6 w-6" />}
+                </Button>
+              </div>
+            )
+          }
+
+          {session?.status === "unauthenticated" && (
+            <div className="flex items-center gap-2 md:gap-5">
+              <Link href="/login">
+                <Button variant="outline">
+                  Login
+                </Button>
+              </Link>
+
+              <Link href="/register">
+                <Button>
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {/*  Drawer */}
           <AnimatePresence>
             {drawerOpen && (
               <>
-                {/* Drawer */}
                 <motion.div
                   initial={{ x: "100%" }}
                   animate={{ x: 0 }}
@@ -68,6 +85,11 @@ export const Navbar = () =>
                   transition={{ type: "tween", duration: 0.3 }}
                   className="fixed top-0  right-0 min-h-screen w-64  z-50 p-6 py-20 flex flex-col gap-4 bg-background/90 backdrop-blur-md border-l-[5px] border-orange-500"
                 >
+                  <div className="flex items-center justify-start text-red-600 cursor-pointer mb-10" onClick={toggleDrawer}>
+                    <X className="h-6 w-6 z-999" />
+                    Close
+                  </div>
+
                   {navItems.map( ( item ) =>
                     item.action === "logout" ? (
                       <Button
@@ -91,6 +113,7 @@ export const Navbar = () =>
                       </Link>
                     )
                   )}
+                  
                 </motion.div>
               </>
             )}

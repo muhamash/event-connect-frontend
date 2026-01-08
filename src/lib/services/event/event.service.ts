@@ -400,3 +400,98 @@ export async function updateEventAction(
     };
   }
 }
+
+export async function cancelEvent(eventId: string) {
+  try {
+  
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized",
+      };
+    }
+
+    if (!eventId || typeof eventId !== "string") {
+      return {
+        success: false,
+        message: "Event ID is required",
+      };
+    }
+
+    
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        hostId: true,
+        status: true,
+        date: true,
+      },
+    });
+
+    if (!event) {
+      return {
+        success: false,
+        message: "Event not found",
+      };
+    }
+
+
+    if (event.hostId !== session.user.id) {
+      return {
+        success: false,
+        message: "Forbidden: You are not the event host",
+      };
+    }
+
+
+    if (event.status === EventStatus.CANCELLED) {
+      return {
+        success: false,
+        message: "Event is already cancelled",
+      };
+    }
+
+    if (event.status === EventStatus.COMPLETED) {
+      return {
+        success: false,
+        message: "Completed events cannot be cancelled",
+      };
+    }
+
+    const now = new Date();
+    if (event.date < now) {
+      return {
+        success: false,
+        message: "Past events cannot be cancelled",
+      };
+    }
+
+    await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        status: EventStatus.CANCELLED,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/events");
+    revalidatePath(`/events/${eventId}`);
+    revalidatePath(`/edit-event/${eventId}`);
+
+    return {
+      success: true,
+      message: "Event cancelled successfully",
+    };
+  }
+  catch ( error )
+  {
+    console.error("Cancel Event Error:", error);
+    return {
+      success: false,
+      message: "Something went wrong while cancelling the event",
+    };
+  }
+}

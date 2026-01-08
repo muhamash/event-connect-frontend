@@ -2,6 +2,7 @@
 
 import { NewEventFilters } from '@/components/NewFilters';
 import Pagination from '@/components/Pagination';
+import { UserRole } from '@/lib/constants/enum.constant';
 import { motion } from 'framer-motion';
 import { use } from 'react';
 import EventCard from './EventCard';
@@ -9,9 +10,10 @@ import EventCard from './EventCard';
 export interface MyEventsContainerProps
 {
     eventsPromise: Promise<any>;
+    userRole?: string;
 }
 
-const MyEventsContainer = ( { eventsPromise }: MyEventsContainerProps ) =>
+const MyEventsContainer = ( { eventsPromise, userRole }: MyEventsContainerProps ) =>
 {
     const myEventsData = use( eventsPromise );
     // console.log( myEventsData?.data )
@@ -44,7 +46,7 @@ const MyEventsContainer = ( { eventsPromise }: MyEventsContainerProps ) =>
                         enabledFilters={{
                             search: true,
                             category: true,
-                            status: true,
+                            status: userRole === UserRole.HOST ? true : false,
                         }}
                     />
 

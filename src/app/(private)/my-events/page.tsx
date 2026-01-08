@@ -42,7 +42,7 @@ const MyEventsPage = async ({
 
     return (
         <Suspense fallback={<MyEventsSkeleton/>}>
-            <MyEventsContainer eventsPromise={eventsPromise } />
+            <MyEventsContainer userRole={sessionUser?.user?.role} eventsPromise={eventsPromise } />
         </Suspense>
     );
 };
