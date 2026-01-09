@@ -4,41 +4,61 @@ import { authOptions } from "@/lib/services/auth/auth.option";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-
 export async function POST(req: Request) {
-    const session = await getServerSession( authOptions );
-    
-    // console.group(session)
-    if ( !session?.user?.id )
-        return NextResponse.json( { message: "Unauthorized" }, { status: 401 } );
+  const sessionAuth = await getServerSession(authOptions);
+  if (!sessionAuth?.user?.id)
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    const { eventId } = await req.json();;
+  const { sessionId } = await req.json();
+  if (!sessionId)
+    return NextResponse.json({ message: "Session ID required" }, { status: 400 });
 
-    const event = await prisma.event.findUnique( { where: { id: eventId } } );
-    
-    if ( !event || !event.joiningFee )
-        return NextResponse.json( { message: "Invalid event" }, { status: 400 } );
+  // Fetch Stripe session
+  const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
 
-    const checkoutSession = await stripe.checkout.sessions.create( {
-        payment_method_types: [ "card" ],
-        mode: "payment",
-        line_items: [
-            {
-                price_data: {
-                    currency: "usd",
-                    unit_amount: event.joiningFee * 100,
-                    product_data: { name: event.title },
-                },
-                quantity: 1,
-            },
-        ],
-        success_url: `${ process.env.NEXT_PUBLIC_APP_URL }/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${ process.env.NEXT_PUBLIC_APP_URL }/payment/cancel`,
-        metadata: {
-            eventId,
-            userId: session.user.id,
-        },
-    } );
+  if (checkoutSession.payment_status !== "paid")
+    return NextResponse.json({ message: "Payment not completed" }, { status: 400 });
 
-    return NextResponse.json( { url: checkoutSession.url } );
-};
+  const metadata = checkoutSession.metadata || {};
+  const eventId = metadata.eventId;
+  const userId = metadata.userId;
+
+  if (!eventId || !userId)
+    return NextResponse.json({ message: "Invalid metadata" }, { status: 400 });
+
+
+  if (userId !== sessionAuth.user.id)
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
+  const existingPayment = await prisma.payment.findUnique({
+    where: { txnId: checkoutSession.id },
+  });
+
+  if (existingPayment) {
+    return NextResponse.json({ message: "Already processed" });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.create({
+      data: {
+        eventId,
+        userId,
+        amount: checkoutSession.amount_total ?? 0,
+        provider: "STRIPE",
+        status: "SUCCESS",
+        txnId: checkoutSession.id,
+      },
+    });
+
+    await tx.participant.create({
+      data: { eventId, userId },
+    });
+
+    await tx.user.update({
+      where: { id: userId },
+      data: { eventsAttended: { increment: 1 } },
+    });
+  });
+
+  return NextResponse.json({ success: true });
+}
