@@ -4,6 +4,19 @@ EventConnect is a modern social platform that connects people who want to attend
 
 ## (Deployment Url) [Live Link] : [https://event-connect-web-nu.vercel.app/]
 
+# Demo Credential
+
+## User 
+email : ash@ash.com
+pass : ash@ash.com
+
+## Admin
+email : ash@admin.com
+pass : ash@admin.com
+
+## Host
+email : ash@host.com
+pass : ash@host.com
 ---
 
 ## 📌 Table of Contents
@@ -349,6 +362,7 @@ CLOUDINARY_API_SECRET=
 - ✅ Backend integration with Next.js Server Actions
 - ✅ NextAuth.js authentication (Google, GitHub, Email)
 - ✅ Stripe payment processing
+- Cron job for automatic update event status
 
 
 ### Technical Improvements
