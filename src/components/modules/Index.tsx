@@ -20,11 +20,17 @@ import
     Zap
   } from "lucide-react";
 
+import { UserRole } from "@/lib/constants/enum.constant";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { mockUsers } from "../data/mockData";
 
-const Index = () => {
-  const topHosts = mockUsers.filter(u => u.isHost).slice(0, 4);
+const Index = ( {role}: any ) =>
+{
+  const router = useRouter();
+
+  const topHosts = mockUsers.filter( u => u.isHost ).slice( 0, 4 );
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
@@ -90,6 +96,28 @@ const Index = () => {
     },
   ];
 
+  const handleHostClick = () =>
+  {
+    console.log( "click", role )
+    if ( !role )
+    {
+      router.push( "/register?tab=HOST" );
+    }
+
+    if ( role === UserRole.HOST )
+    {
+      router.push( "/events/create" );
+      return;
+    }
+
+    if ( role === UserRole.USER )
+    {
+      toast.error( "Please logout and login again as a Host" );
+      return;
+    }
+
+  };
+
   return (
     <div className="min-h-screen bg-background">
 
@@ -134,15 +162,16 @@ const Index = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/register?tabs=HOST">
+            {role !== "ADMIN" && (
               <Button
                 size="lg"
                 variant="outline"
+                onClick={handleHostClick}
                 className="border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground text-lg px-8 py-6"
               >
                 Host an Event
               </Button>
-            </Link>
+            )}
           </div>
         </motion.div>
       </section>
@@ -151,7 +180,7 @@ const Index = () => {
       <section className="py-12 bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+            {stats.map( ( stat, index ) => (
               <motion.div
                 key={stat.label}
                 {...fadeInUp}
@@ -164,7 +193,7 @@ const Index = () => {
                 </div>
                 <div className="text-muted-foreground">{stat.label}</div>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>
@@ -198,7 +227,7 @@ const Index = () => {
                 title: "Connect & Attend",
                 description: "Match with companions and experience events together.",
               },
-            ].map((item, index) => (
+            ].map( ( item, index ) => (
               <motion.div
                 key={item.step}
                 {...fadeInUp}
@@ -212,7 +241,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>
@@ -230,7 +259,7 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((category, index) => (
+            {categories.map( ( category, index ) => (
               <motion.div
                 key={category.name}
                 {...fadeInUp}
@@ -238,12 +267,12 @@ const Index = () => {
               >
                 <Card className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group hover:shadow-card">
                   <CardContent className="p-8 text-center">
-                    <category.icon className={`h-12 w-12 mx-auto mb-4 ${category.color} group-hover:scale-110 transition-transform`} />
+                    <category.icon className={`h-12 w-12 mx-auto mb-4 ${ category.color } group-hover:scale-110 transition-transform`} />
                     <h3 className="font-semibold text-foreground">{category.name}</h3>
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>
@@ -258,7 +287,7 @@ const Index = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
+            {features.map( ( feature, index ) => (
               <motion.div
                 key={feature.title}
                 {...fadeInUp}
@@ -274,7 +303,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>
@@ -292,13 +321,13 @@ const Index = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {topHosts.map((host, index) => (
+            {topHosts.map( ( host, index ) => (
               <motion.div
                 key={host.id}
                 {...fadeInUp}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link href={`/profile/${host.id}`}>
+                <Link href={`/profile/${ host.id }`}>
                   <Card className="bg-card border-border hover:border-primary/50 transition-all group text-center">
                     <CardContent className="p-6">
                       <div className="relative mx-auto w-20 h-20 mb-4">
@@ -323,7 +352,7 @@ const Index = () => {
                   </Card>
                 </Link>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>
@@ -338,7 +367,7 @@ const Index = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.map( ( testimonial, index ) => (
               <motion.div
                 key={testimonial.name}
                 {...fadeInUp}
@@ -347,9 +376,9 @@ const Index = () => {
                 <Card className="bg-card border-border h-full">
                   <CardContent className="p-6">
                     <div className="flex mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
+                      {[ ...Array( testimonial.rating ) ].map( ( _, i ) => (
                         <Star key={i} className="h-5 w-5 fill-secondary text-secondary" />
-                      ))}
+                      ) )}
                     </div>
                     <p className="text-foreground mb-4 italic">"{testimonial.content}"</p>
                     <div>
@@ -359,7 +388,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            ) )}
           </div>
         </div>
       </section>

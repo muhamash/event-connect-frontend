@@ -94,7 +94,7 @@ const EventDetails = ( { eventPromise, sessionRole, sessionUserId }: EventDetail
           />
           <div className="absolute inset-0 bg-gradient-overlay" />
           {
-            sessionRole !== UserRole.USER && (
+            sessionRole && (
               <div className="absolute top-6 left-6 flex  items-center gap-5">
                 <Badge className="bg-rose-700 w-20 h-10 flex items-center justify-center">{eventData?.data?.status}</Badge>
                 {/* <ShareButton /> */}

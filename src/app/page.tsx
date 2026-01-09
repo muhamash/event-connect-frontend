@@ -1,6 +1,7 @@
 import Index from "@/components/modules/Index";
-import prisma from "@/lib/config/db/prisma.db";
+import { authOptions } from "@/lib/services/auth/auth.option";
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
 
 export const metadata: Metadata = {
   title: "Event connect - Find and join events with others",
@@ -10,11 +11,11 @@ export const metadata: Metadata = {
 export default async function Home ()
 {
 
-  const test = await prisma.user.findMany();
-  
-  console.log( test )
+
+  const session = await getServerSession( authOptions );
+  // console.log(session)
   
   return (
-    <Index/>
+    <Index role={ session?.user?.role} />
   );
 }

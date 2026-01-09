@@ -14,9 +14,12 @@ interface DashboardProps {
   role: string;
   fullname: string;
   eventsPromise: Promise<any>;
+  getParticipantPromise: Promise<any>;
+  getRevenueForHostPromise: Promise<any>;
+  getHostStatsPromise: Promise<any>;
 }
 
-const Dashboard = ({ userId, role, fullname, eventsPromise }: DashboardProps) => {
+const Dashboard = ({ userId, role, fullname, eventsPromise, getParticipantPromise, getRevenueForHostPromise, getHostStatsPromise }: DashboardProps) => {
   
   const currentRole = role?.toLowerCase(); 
   const currentUser = mockUsers[0];
@@ -78,13 +81,19 @@ const Dashboard = ({ userId, role, fullname, eventsPromise }: DashboardProps) =>
                 eventsPromise={eventsPromise}
                 stats={stats}
                 mockUsers={mockUsers}
+                getParticipantPromise={getParticipantPromise}
+                getRevenueForHostPromise={getRevenueForHostPromise}
+                getHostStatsPromise={getHostStatsPromise}
               />
             ) : (
               <HostDashboardRendere
                   hostedEvents={hostedEvents}
                   eventsPromise={eventsPromise}
                 stats={stats}
-                mockUsers={mockUsers}
+                  mockUsers={mockUsers}
+                  getHostStatsPromise={getHostStatsPromise}
+                  getParticipantPromise={getParticipantPromise}
+                  getRevenueForHostPromise={getRevenueForHostPromise}
               />
             )}
           </motion.div>

@@ -53,7 +53,14 @@ export default function OngoingTab ({eventsPromise}: OngoingTabProps)
                         {eventData?.events?.map( ( event ) => (
                             <OngoingEventCard key={event?.id} event={event} />
                         ) )}
+
+                        {
+                            eventData?.events?.length === 0 && (
+                                <p className="text-red-500 py-10 ">Empty ongoing events!!!</p>
+                            )
+                        }
                     </div>
+
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (

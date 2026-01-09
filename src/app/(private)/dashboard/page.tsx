@@ -2,6 +2,7 @@ import Dashboard from "@/components/modules/dashboard/DashboardContainer";
 import DashboardSkeleton from "@/components/skeletons/DashBoardSkelton";
 import { authOptions } from "@/lib/services/auth/auth.option";
 import { getEventForTheUserBasedOnRole } from "@/lib/services/event/event.service";
+import { getHostStats, getParticipantsForHost, getRevenueForHost } from "@/lib/services/host/host.service";
 import { normalizeParam } from "@/lib/utils";
 import { RouteSearchParams } from "@/types/pages.type";
 import { Metadata } from "next";
@@ -33,10 +34,16 @@ export default async function DashboardPage ({searchParams}:DashboardProps)
     }
   );
 
-  // console.log(sessionUser?.user)
+  const getParticipantPromise = getParticipantsForHost();
+  const getRevenueForHostPromise = getRevenueForHost();
+  const getHostStatsPromise = getHostStats();
+
+  // const test = await getHostStatsPromise;
+
+  // console.log(test, "hoststat")
   return (
     <Suspense fallback={<DashboardSkeleton/>}>
-      <Dashboard eventsPromise={eventsPromise} fullname={sessionUser?.user?.fullname} role={sessionUser?.user?.role} userId={ sessionUser?.user?.id } />
+      <Dashboard eventsPromise={eventsPromise} fullname={sessionUser?.user?.fullname} role={sessionUser?.user?.role} userId={sessionUser?.user?.id} getParticipantPromise={getParticipantPromise} getRevenueForHostPromise={getRevenueForHostPromise} getHostStatsPromise={ getHostStatsPromise } />
     </Suspense>
   )
 }
