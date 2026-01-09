@@ -77,7 +77,7 @@ export default function SuccessPage() {
           href="/my-events"
           className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 px-6 py-3 font-semibold text-black shadow-lg transition-all hover:scale-[1.02] hover:shadow-yellow-500/40"
         >
-          Go to My Events
+          Go to The Event
         </Link>
 
         <p className="mt-4 text-xs text-yellow-100/50">

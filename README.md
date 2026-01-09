@@ -7,8 +7,8 @@ EventConnect is a modern social platform that connects people who want to attend
 # Demo Credential
 
 ## User 
-email : ash@ash.com
-pass : ash@ash.com
+email : new@ash.com
+pass : new@ash.com
 
 ## Admin
 email : ash@admin.com
