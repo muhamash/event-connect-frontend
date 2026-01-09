@@ -119,7 +119,7 @@ export const NewEventFilters = ( {
         filters.search,
     ].filter( Boolean ).length;
 
-    const locations = [ "New York", "Los Angeles", "San Francisco", "Denver", "Chicago", "Miami" ];
+    const locations = [ "Dhaka", "Dhanmondi", "Barishal", "Rangpur", "Chittagong", "Sylhet", "Khulna", "Rajshahi" ];
     const dateRanges = [
         { value: "today", label: "Today" },
         { value: "tomorrow", label: "Tomorrow" },

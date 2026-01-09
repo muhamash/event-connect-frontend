@@ -1,6 +1,5 @@
 "use client"
 
-import { mockReviews, mockUsers } from "@/components/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,13 +15,10 @@ import
     Edit,
     Locate,
     MapPin,
-    PenIcon,
-    Star,
     Ticket,
     UserCheck2Icon
   } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { use } from "react";
 
 interface ProfileProps
@@ -38,15 +34,12 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
   const userData = use( userPromise )
   console.log( userData?.data )
   
-  const { id } = useParams();
-  const user = mockUsers.find( ( u ) => u.id === id ) || mockUsers[ 0 ];
   const isOwnProfile = userData?.data?.id === sessionUser;
 
   const hostedEventsCompleted = userData?.data?.hostedEvents?.filter( ( e ) => e.status === EventStatus.COMPLETED );
 
   const randomJoinedEvents = shuffleArray( userData?.data?.joinedEvents ?? [] );
 
-  const userReviews = mockReviews;
 
   if ( !userData || ( userData as any ).success === false )
   {
@@ -148,7 +141,7 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
             {
               userData?.data?.role === UserRole.HOST && (
                 <>
-                  <Card className="bg-card border-border">
+                  {/* <Card className="bg-card border-border">
                     <CardContent className="p-6 text-center">
                       <div className="flex items-center justify-center gap-2 text-primary mb-2">
                         <Star className="h-5 w-5 fill-primary" />
@@ -158,7 +151,7 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
                         {userData?.data?.totalReviews ?? 0} reviews
                       </p>
                     </CardContent>
-                  </Card>
+                  </Card> */}
 
                   <Card className="bg-card border-border">
                     <CardContent className="p-6 text-center">
@@ -187,20 +180,6 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
               )
             }
 
-            {
-              userData?.data?.role === UserRole.USER && (
-                <Card className="bg-card border-border">
-                  <CardContent className="p-6 text-center">
-                    <div className="flex items-center justify-center gap-2 text-accent mb-2">
-                      <PenIcon className="h-5 w-5" />
-                      <span className="text-2xl font-bold">{userData?.data?.reviewsWritten?.length ?? 0}</span>
-                    </div>
-                    <p className="text-muted-foreground text-sm">Reviews written</p>
-                  </CardContent>
-                </Card>
-              )
-            }
-
             <Card className="bg-card border-border">
               <CardContent className="p-6 text-center">
                 <div className="flex items-center justify-center gap-2 text-primary mb-2">
@@ -222,8 +201,8 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
                     {
                       userData?.data?.role === UserRole.HOST && (
                         <>
-                          <TabsTrigger value="hosted">Hosted Events</TabsTrigger>
-                          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                          <TabsTrigger value="hosted">Completed host Events</TabsTrigger>
+                          
                         </>
                       )
                     }
@@ -351,51 +330,6 @@ const Profile = ( { userPromise, sessionUser }: ProfileProps ) =>
                     )
                   }
 
-
-                  <TabsContent value="reviews">
-                    <div className="space-y-4">
-                      {userReviews.map( ( review ) => (
-                        <Card key={review.id} className="bg-card border-border">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <Avatar>
-                                <AvatarImage src={review.userAvatar} />
-                                <AvatarFallback>
-                                  {review.userName.charAt( 0 )}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div>
-                                    <h4 className="font-bold text-foreground">
-                                      {review.userName}
-                                    </h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      {review.date}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    {[ ...Array( 5 ) ].map( ( _, i ) => (
-                                      <Star
-                                        key={i}
-                                        className={`h-4 w-4 ${ i < review.rating
-                                          ? "fill-secondary text-secondary"
-                                          : "text-muted"
-                                          }`}
-                                      />
-                                    ) )}
-                                  </div>
-                                </div>
-                                <p className="text-muted-foreground">
-                                  {review.comment}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ) )}
-                    </div>
-                  </TabsContent>
                 </Tabs>
               </motion.div>
             )

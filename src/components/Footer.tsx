@@ -31,7 +31,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/host" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                <Link href="/register?tab=HOST" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Become a Host
                 </Link>
               </li>
@@ -52,11 +52,7 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4 text-foreground">Support</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/help" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                  Help Center
-                </Link>
-              </li>
+              
               <li>
                 <Link href="/safety" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Safety Guidelines

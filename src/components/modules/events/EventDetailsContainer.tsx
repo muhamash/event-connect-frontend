@@ -1,6 +1,5 @@
 "use client"
 
-import { mockEvents, mockUsers } from "@/components/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,11 +14,10 @@ import
     Clock,
     DollarSign,
     MapPin,
-    Star,
     Users
   } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import toast from "react-hot-toast";
 import CheckoutButton from "../checkout/CheckoutButton";
@@ -76,10 +74,6 @@ const EventDetails = ( { eventPromise, sessionRole, sessionUserId }: EventDetail
     router.refresh();
   };
 
-  // mock
-  const { id } = useParams();
-  const event = mockEvents.find((e) => e.id === Number(id)) || mockEvents[0];
-  const host = mockUsers.find((u) => u.id === event.hostId) || mockUsers[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -184,10 +178,10 @@ const EventDetails = ( { eventPromise, sessionRole, sessionUserId }: EventDetail
                       <div className="flex-1">
                         <h4 className="font-semibold text-foreground">{eventData?.data?.host?.fullname}</h4>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
+                          {/* <div className="flex items-center gap-1">
                             <Star className="h-4 w-4 fill-secondary text-secondary" />
                             <span>{eventData?.data?.host?.rating}</span>
-                          </div>
+                          </div> */}
                           {/* <span>{eventData?.data?.host?.eventsHosted} events hosted</span> */}
                         </div>
                       </div>
@@ -351,13 +345,7 @@ const EventDetails = ( { eventPromise, sessionRole, sessionUserId }: EventDetail
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Rating</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-secondary text-secondary" />
-                          <span className="font-semibold text-foreground">
-                            {event.rating} ({host.totalReviews} reviews)
-                          </span>
-                        </div>
+                        
                       </div>
                     </div>
                   </CardContent>

@@ -26,9 +26,6 @@ const Dashboard = ({ userId, role, fullname, eventsPromise, getParticipantPromis
   
   const hostedEvents = mockEvents.filter((e) => e.hostId === currentUser.id);
   const upcomingHosted = hostedEvents.filter((e) => e.status === "open");
-  const joinedEvents = mockEvents.slice(2, 5);
-  const pastEvents = mockEvents.slice(0, 2);
-  const savedEvents = mockEvents.slice(3, 6);
 
   const stats = {
     totalRevenue: 1250,
@@ -75,7 +72,7 @@ const Dashboard = ({ userId, role, fullname, eventsPromise, getParticipantPromis
 
           {/* Main Content based on role */}
           <motion.div {...fadeInUp} transition={{ delay: 0.2 }}>
-            {currentRole === "host" ? (
+            {currentRole === "host" && (
               <HostDashboardRendere
                 hostedEvents={hostedEvents}
                 eventsPromise={eventsPromise}
@@ -85,17 +82,7 @@ const Dashboard = ({ userId, role, fullname, eventsPromise, getParticipantPromis
                 getRevenueForHostPromise={getRevenueForHostPromise}
                 getHostStatsPromise={getHostStatsPromise}
               />
-            ) : (
-              <HostDashboardRendere
-                  hostedEvents={hostedEvents}
-                  eventsPromise={eventsPromise}
-                stats={stats}
-                  mockUsers={mockUsers}
-                  getHostStatsPromise={getHostStatsPromise}
-                  getParticipantPromise={getParticipantPromise}
-                  getRevenueForHostPromise={getRevenueForHostPromise}
-              />
-            )}
+            ) }
           </motion.div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Calendar, DollarSign, Star, TrendingUp, Users } from "lucide-react";
+import { Calendar, DollarSign, TrendingUp, Users } from "lucide-react";
 import { use } from "react";
 
 interface HostsStatsProps
@@ -31,7 +31,7 @@ export default function HostStats ( {  getHostStatsPromise }:HostsStatsProps) {
                     <div className="flex items-center justify-between mb-2">
                         <DollarSign className="h-5 w-5 text-primary" />
                         <Badge variant="outline" className="border-green-500/50 text-green-500">
-                            <TrendingUp className="h-3 w-3 mr-1" /> +12%
+                            <TrendingUp className="h-5 w-4 mr-1" />
                         </Badge>
                     </div>
                     <p className="text-2xl font-bold">${stats.totalRevenue}</p>
@@ -59,7 +59,7 @@ export default function HostStats ( {  getHostStatsPromise }:HostsStatsProps) {
                 </CardContent>
             </Card>
 
-            <Card className="bg-card border-border">
+            {/* <Card className="bg-card border-border">
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
                         <Star className="h-5 w-5 text-primary fill-primary" />
@@ -67,7 +67,7 @@ export default function HostStats ( {  getHostStatsPromise }:HostsStatsProps) {
                     <p className="text-2xl font-bold">{stats.avgRating}</p>
                     <p className="text-sm text-muted-foreground">Average Rating</p>
                 </CardContent>
-            </Card>
+            </Card> */}
         </motion.div>
     );
 }

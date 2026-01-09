@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Event } from "@/lib/interface/event.interface";
 import { formatDate } from "@/lib/utils";
 import { motion, MotionProps } from "framer-motion";
-import { Calendar, MapPin, Star, Users } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 
 
@@ -68,9 +68,8 @@ const EventCard: React.FC<EventCardProps> = ({
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-border">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-secondary text-secondary" />
-                <span className="font-semibold text-foreground">{event?.rating}</span>
+              <div className="flex items-center gap-1 text-orange-400 font-mono">
+                <p className="px-3 py-2 bg-orange-500 text-white rounded-md shadow">view</p>
               </div>
               <span className="text-lg font-bold text-primary">
                 {event?.joiningFee === 0 ? "Free" : `$${event.joiningFee}`}
