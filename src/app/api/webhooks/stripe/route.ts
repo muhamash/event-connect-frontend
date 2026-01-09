@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
 
+  console.log( "this is running!!" )
+  
   const sig = req.headers.get("stripe-signature");
   if (!sig) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
 
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
-    console.error("❌ Webhook signature verification failed:", err.message);
+    console.error(" Webhook signature verification failed:", err.message);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
@@ -31,6 +33,7 @@ export async function POST(req: Request) {
     try {
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log( session );
 
         if (session.payment_status !== "paid") return;
 
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
         const eventId = metadata.eventId;
         const userId = metadata.userId;
         if (!eventId || !userId) {
-          console.warn("⚠️ Missing metadata in session:", session.id);
+          console.warn(" Missing metadata in session:", session.id);
           return;
         }
 
@@ -67,10 +70,10 @@ export async function POST(req: Request) {
           });
         });
 
-        console.log(`✅ Payment processed for session: ${session.id}, user: ${userId}`);
+        console.log(` Payment processed for session: ${session.id}, user: ${userId}`);
       }
     } catch (err) {
-      console.error("❌ DB transaction failed:", err);
+      console.error(" DB transaction failed:", err);
     }
   })();
 
