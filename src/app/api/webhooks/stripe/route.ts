@@ -8,21 +8,22 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
 
-  console.log( "this is running!!", req.headers )
+  // console.log( "this is running!!", req.headers )
   
   const sig = req.headers.get( "stripe-signature" );
   
+  console.log(sig)
+  
   if (!sig) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
 
-  const bodyBuffer = await req.arrayBuffer();
-  const body = Buffer.from( bodyBuffer );
+  const rawBody = await req.text();
 
-  if (!body) return NextResponse.json({ error: "Empty body" }, { status: 400 });
+  if (!rawBody) return NextResponse.json({ error: "Empty body" }, { status: 400 });
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error(" Webhook signature verification failed:", err.message);
     return NextResponse.json({ error: err.message }, { status: 400 });
