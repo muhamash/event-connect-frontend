@@ -5,6 +5,56 @@ import { EventStatus } from "@/lib/constants/enum.constant";
 import { authOptions } from "@/lib/services/auth/auth.option";
 import { getServerSession } from "next-auth";
 
+interface PaymentData {
+  eventId: string;
+  userId: string;
+  txnId: string;
+  amount: number;
+  provider?: string; // default to "STRIPE"
+}
+
+export async function processPayment({
+  eventId,
+  userId,
+  txnId,
+  amount,
+  provider = "STRIPE",
+}: PaymentData) {
+  // Prevent duplicate payments
+  const existingPayment = await prisma.payment.findUnique({
+    where: { txnId },
+  });
+
+  if (existingPayment) {
+    return { success: true, alreadyProcessed: true };
+  }
+
+  // Create payment record
+  await prisma.payment.create({
+    data: {
+      eventId,
+      userId,
+      amount,
+      provider,
+      status: "SUCCESS",
+      txnId,
+    },
+  });
+
+  // Add participant
+  await prisma.participant.create({
+    data: { eventId, userId },
+  });
+
+  // Increment user's attended events
+  await prisma.user.update({
+    where: { id: userId },
+    data: { eventsAttended: { increment: 1 } },
+  });
+
+  return { success: true };
+}
+
 export const joinFreeEvent = async ( eventId: string ) =>
 {
     if ( !eventId )
